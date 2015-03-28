@@ -31,6 +31,13 @@ struct Errors
 
 class Packet
 {
+private:
+	uint8_t *data;
+	uint8_t length;
+public:
+	Packet(uint8_t data[], uint8_t length);
+
+	uint8_t& operator[](int index);
 
 };
 
@@ -38,6 +45,10 @@ class Packet
 
 class UpdatedSoftwareSerial : public SoftwareSerial
 {
+public:
+	UpdatedSoftwareSerial(uint8_t rx, uint8_t tx);
+	void SendPacket(Packet p);
+	Packet recivePacket(uint8_t length);
 
 };
 
@@ -52,11 +63,25 @@ public:
 	ServoCascadue(int rx, int tx, int transmitState);
 	ServoCascadue(SoftwareSerial &serial);
 
+	/**
+	 * Check the servos status
+	 */
 	Errors ping(int id);
+	/**
+	 * Set maximum and minimum rotation angel
+	 */
 	Errors setServoLimit(int id, int cw_limit, int ccw_limit);
+	/**
+	 * Set position of the servo on special velocity
+	 */
 	Errors setServoPosition(int id, int pos, int velocity);
+	/**
+	 * Set velocity of the servo
+	 */
 	Errors setServoVelocity(int id, int velocity);
-
+	/**
+	 * Coming soon in next updates...
+	 */
 };
 
 /////////////////////////////////////////////
