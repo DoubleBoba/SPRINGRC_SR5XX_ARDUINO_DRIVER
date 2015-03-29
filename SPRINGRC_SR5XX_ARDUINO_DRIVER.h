@@ -47,7 +47,7 @@ class UpdatedSoftwareSerial : public SoftwareSerial
 {
 public:
 	UpdatedSoftwareSerial(uint8_t rx, uint8_t tx);
-	void SendPacket(Packet p);
+	void sendPacket(Packet p);
 	Packet recivePacket(uint8_t length);
 
 };
@@ -78,6 +78,12 @@ public:
 	 * Set velocity of the servo
 	 */
 	Errors setServoVelocity(int id, int velocity);
+	/**
+	 * Method, that generalize process of building
+	 * and sending packets to servos.
+	 */
+	void packetBuildAndSend(uint8_t id,uint8_t instruction, uint8_t paramsLen,
+			uint8_t *params);
 	/**
 	 * Coming soon in next updates...
 	 */

@@ -15,7 +15,7 @@ uint8_t& Packet::operator [](const uint8_t index)
 
 UpdatedSoftwareSerial::UpdatedSoftwareSerial(uint8_t rx, uint8_t tx) : SoftwareSerial(rx, tx)
 {}
-UpdatedSoftwareSerial::SendPacket(const Packet& p)
+UpdatedSoftwareSerial::sendPacket(const Packet& p)
 {
 	uint8_t i;
 	for (i = 0; i < p.getLength(); i++)
@@ -36,26 +36,39 @@ ServoCascadue::ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState) : tr
 	pinMode(this->transmitState, OUTPUT);
 	digitalWrite(this->transmitState,LOW);
 	this->serial = (UpdatedSoftwareSerial*) new UpdatedSoftwareSerial(rx, tx);
-	this->serial->begin(500000); // I find this speed in examples for SR518
+	this->serial->begin(500000); // I found this speed in examples for SR518,
+								 // I don`t now, is it correct.
 
+}
+
+ServoCascadue::packetBuildAndSend(uint8_t id, uint8_t instruction,
+		uint8_t paramsLen, uint8_t *params)
+{
+	uint8_t length = paramsLen +6;
+	uint8_t *data = (uint8_t*) new uint8_t[length];
+	*data = 0xff;
+	*(data+1) = 0xff;
+	*(data+2) = paramsLen+2;
+	*(data+3) = instruction;
+	uint8_t i;
+	for (i = 0; i < paramsLen; i++)
+		*(data+i+4) = *(params+i);
+	uint8_t checkSum = 0;
+	for (i = 2; i < length -1; i++)
+		checkSum += *(data+i);
+	checkSum = ~checkSum;
+	Packet p(data, length);
+	serial->sendPacket(p); // Yeah, bitches!
 }
 
 Errors ServoCascadue::ping(uint8_t id)
 {
-	/*
-	 * TODO maybe it need to get in other method?
-	 */
+
 	digitalWrite(this->transmitState, HIGH);
-	uint8_t *data = new uint8_t[6];
-	*(data) = 0xff;
-	*(data+1) = 0xff;
-	*(data+2) = id;
-	*(data+3) = 0x02;
-	*(data+4) = 0x01;
-	*(data+5) = ~(id+0x03);
-	Packet p(data, 6);
-	this->serial->SendPacket(p);
-	digitalWrite(this->transmitState, LOW);
+	packetBuildAndSend(id, 0x01, 0x00, 0); // Very simple!
+	// In next updates I`ll add method, that will create readable
+	// error.
+
 }
 
 
