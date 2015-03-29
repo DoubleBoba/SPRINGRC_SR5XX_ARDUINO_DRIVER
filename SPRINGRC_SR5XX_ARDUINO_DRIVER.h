@@ -8,7 +8,7 @@
 #define _SPRINGRC_SR5XX_ARDUINO_DRIVER_H_
 #include "Arduino.h"
 #include "SoftwareSerial.h"
-
+#include "new.h"
 /////////////////////////////////////////////
 
 enum Error
@@ -37,8 +37,8 @@ private:
 public:
 	Packet(uint8_t data[], uint8_t length);
 
-	uint8_t& operator[](int index);
-
+	uint8_t& operator[](uint8_t index);
+	uint8_t getLength();
 };
 
 /////////////////////////////////////////////
@@ -56,17 +56,16 @@ public:
 class ServoCascadue
 {
 private:
-	SoftwareSerial *serial;
-	int transmitState;
+	UpdatedSoftwareSerial *serial;
+	uint8_t transmitState;
 
 public:
-	ServoCascadue(int rx, int tx, int transmitState);
-	ServoCascadue(SoftwareSerial &serial);
+	ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState);
 
 	/**
 	 * Check the servos status
 	 */
-	Errors ping(int id);
+	Errors ping(uint8_t id);
 	/**
 	 * Set maximum and minimum rotation angel
 	 */
