@@ -36,7 +36,7 @@ private:
 	uint8_t length;
 public:
 	Packet(uint8_t data[], uint8_t length);
-
+	~Packet();
 	uint8_t& operator[](uint8_t index);
 	uint8_t getLength();
 };
@@ -61,7 +61,18 @@ private:
 
 public:
 	ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState);
-
+	~ServoCascadue();
+	/**
+	 * Method, that generalize process of building
+	 * and sending packets to servos.
+	 */
+	void packetBuildAndSend(uint8_t id,uint8_t instruction, uint8_t paramsLen,
+		uint8_t *params);
+	/**
+	 * Method, that generalize process of getting
+	 * packet from servo.
+	 */
+	Packet packetRecive();
 	/**
 	 * Check the servos status
 	 */
@@ -78,12 +89,7 @@ public:
 	 * Set velocity of the servo
 	 */
 	Errors setServoVelocity(int id, int velocity);
-	/**
-	 * Method, that generalize process of building
-	 * and sending packets to servos.
-	 */
-	void packetBuildAndSend(uint8_t id,uint8_t instruction, uint8_t paramsLen,
-			uint8_t *params);
+
 	/**
 	 * Coming soon in next updates...
 	 */

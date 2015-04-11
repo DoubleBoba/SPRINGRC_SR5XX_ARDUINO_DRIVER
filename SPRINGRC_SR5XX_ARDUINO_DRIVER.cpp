@@ -3,13 +3,20 @@
 
 Packet::Packet(uint8_t *data, uint8_t length)
 {
-	this->data = data;
+	int i;
+	this->data = (uint8_t*) new uint8_t[length];
+	for (i = 0; i < length; i++)
+		*(this->data+i) = *(data+i);
 	this->length = length;
+}
+Packet::~Packet() {
+	delete [] data;
 }
 uint8_t& Packet::operator [](const uint8_t index)
 {
 	return (index >= length) ? 0 : *(data+index);
 }
+
 
 /////////////////////////////////////////////
 
@@ -41,6 +48,11 @@ ServoCascadue::ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState) : tr
 
 }
 
+ServoCascadue::~ServoCascadue()
+{
+	delete serial;
+}
+
 ServoCascadue::packetBuildAndSend(uint8_t id, uint8_t instruction,
 		uint8_t paramsLen, uint8_t *params)
 {
@@ -60,7 +72,29 @@ ServoCascadue::packetBuildAndSend(uint8_t id, uint8_t instruction,
 	Packet p(data, length);
 	serial->sendPacket(p); // Yeah, bitches!
 }
-
+Packet *ServoCascadue::packetRecive() {
+	/*
+	 * Creating the temporary array.
+	 * When i get the data range, i
+	 * reallocate memory for this
+	 * packet.
+	 */
+	uint8_t *temp = (uint8_t *) new uint8_t[4];
+	while (!serial->available()); // Waiting for data
+	uint8_t i;
+	for (i = 0; i < 4; i++)
+	{
+		while (!serial->available()); // Wait for next byte
+		*(temp+i) = this->serial->read();
+	}
+	uint8_t len = (*(temp+3)) + 4; // Calculate new size
+	uint8_t *data = (uint8_t *) new uint8_t[len]; //reallocating mem
+	for (i = 0; i<4; i++)
+		*(data+i) = *(temp+i);
+	delete [] temp;
+	serial->readBytes(data+4,len-4); //reading other bytes
+	return (Packet *)new Packet(data, len);
+}
 Errors ServoCascadue::ping(uint8_t id)
 {
 
