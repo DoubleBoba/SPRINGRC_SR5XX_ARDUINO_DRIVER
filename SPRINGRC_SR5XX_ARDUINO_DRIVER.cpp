@@ -12,9 +12,10 @@ Packet::Packet(uint8_t *data, uint8_t length)
 Packet::~Packet() {
 	delete [] data;
 }
-uint8_t& Packet::operator [](const uint8_t index)
+uint8_t& Packet::operator [](uint8_t index)
 {
-	return (index >= length) ? 0 : *(data+index);
+	uint8_t result = (index >= length) ? 0 : *(this->data+index);
+	return result;
 }
 
 
@@ -22,23 +23,27 @@ uint8_t& Packet::operator [](const uint8_t index)
 
 UpdatedSoftwareSerial::UpdatedSoftwareSerial(uint8_t rx, uint8_t tx) : SoftwareSerial(rx, tx)
 {}
-UpdatedSoftwareSerial::sendPacket(const Packet& p)
+void UpdatedSoftwareSerial::sendPacket(Packet& p)
 {
 	uint8_t i;
 	for (i = 0; i < p.getLength(); i++)
 		this->print(p[i]);
 }
-UpdatedSoftwareSerial::recivePacket(const uint8_t length)
+
+Packet UpdatedSoftwareSerial::recivePacket(const uint8_t length)
 {
+	/* FIXME bad declaration. Not using now.
 	uint8_t *data = (uint8_t *) new uint8_t[length];
 	uint8_t i;
 	for (i = 0; i <length; i++)
 		*(data+i) = this->read();
+	*/
 }
 
 /////////////////////////////////////////////
 
-ServoCascadue::ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState) : transmitState(transmitState)
+ServoCascadue::ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState)
+			: transmitState(transmitState)
 {
 	pinMode(this->transmitState, OUTPUT);
 	digitalWrite(this->transmitState,LOW);
@@ -53,7 +58,7 @@ ServoCascadue::~ServoCascadue()
 	delete serial;
 }
 
-ServoCascadue::packetBuildAndSend(uint8_t id, uint8_t instruction,
+void ServoCascadue::packetBuildAndSend(uint8_t id, uint8_t instruction,
 		uint8_t paramsLen, uint8_t *params)
 {
 	uint8_t length = paramsLen +6;
@@ -95,14 +100,37 @@ Packet *ServoCascadue::packetRecive() {
 	serial->readBytes(data+4,len-4); //reading other bytes
 	return (Packet *)new Packet(data, len);
 }
+
+Errors ServoCascadue::checkForErrors(Packet *packet)
+{
+	int count = 0;
+	uint8_t i;
+	Packet p = *(packet);
+	for (i = p[4]; i > 0; i >> 1)
+	{
+		if (i & 1)
+			count++;
+	}
+	Error *errs = (Error *) new Error[count];
+	uint8_t iter = 0, errNum = 6;
+	for (i = p[4]; i > 0; i >> 1, errNum--)
+		{
+			if (i & 1)
+			{
+
+
+			}
+		}
+}
+
 Errors ServoCascadue::ping(uint8_t id)
 {
 
 	digitalWrite(this->transmitState, HIGH);
-	packetBuildAndSend(id, 0x01, 0x00, 0); // Very simple!
-	// In next updates I`ll add method, that will create readable
-	// error.
-
+	packetBuildAndSend(id, 0x01, 0x00, 0);
+	digitalWrite(this->transmitState, LOW);
+	Packet *p = this->packetRecive();
+	return this->checkForErrors(p);
 }
 
 

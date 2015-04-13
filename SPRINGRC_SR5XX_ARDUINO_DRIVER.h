@@ -47,7 +47,7 @@ class UpdatedSoftwareSerial : public SoftwareSerial
 {
 public:
 	UpdatedSoftwareSerial(uint8_t rx, uint8_t tx);
-	void sendPacket(Packet p);
+	void sendPacket(Packet& p);
 	Packet recivePacket(uint8_t length);
 
 };
@@ -72,7 +72,13 @@ public:
 	 * Method, that generalize process of getting
 	 * packet from servo.
 	 */
-	Packet packetRecive();
+	Packet *packetRecive();
+
+	/**
+	 * Method, that get readable array of
+	 * errors.
+	 */
+	Errors checkForErrors(Packet *p);
 	/**
 	 * Check the servos status
 	 */
