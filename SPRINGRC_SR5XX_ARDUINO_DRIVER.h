@@ -25,7 +25,7 @@ enum Error
 struct Errors
 {
 	int count;
-	Errors *ers;
+	Error *ers;
 };
 /////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ class UpdatedSoftwareSerial : public SoftwareSerial
 {
 public:
 	UpdatedSoftwareSerial(uint8_t rx, uint8_t tx);
-	void sendPacket(Packet& p);
+	void sendPacket(Packet p);
 	Packet recivePacket(uint8_t length);
 
 };
@@ -86,11 +86,11 @@ public:
 	/**
 	 * Set maximum and minimum rotation angel
 	 */
-	Errors setServoLimit(int id, int cw_limit, int ccw_limit);
+	Errors setServoLimit(uint8_t id, uint16_t cw_limit, uint16_t ccw_limit);
 	/**
 	 * Set position of the servo on special velocity
 	 */
-	Errors setServoPosition(int id, int pos, int velocity);
+	Errors setServoPosition(uint8_t id, uint16_t pos, uint16_t velocity);
 	/**
 	 * Set velocity of the servo
 	 */
@@ -103,7 +103,7 @@ public:
 
 /////////////////////////////////////////////
 
-
+uint8_t* splitShort(uint16_t sh);
 
 //Do not add code below this line
 #endif /* _SPRINGRC_SR5XX_ARDUINO_DRIVER_H_ */

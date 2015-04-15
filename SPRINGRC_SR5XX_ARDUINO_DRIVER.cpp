@@ -17,29 +17,33 @@ uint8_t& Packet::operator [](uint8_t index)
 	uint8_t result = (index >= length) ? 0 : *(this->data+index);
 	return result;
 }
-
+uint8_t Packet::getLength()
+{
+	return this->length;
+}
 
 /////////////////////////////////////////////
 
 UpdatedSoftwareSerial::UpdatedSoftwareSerial(uint8_t rx, uint8_t tx) : SoftwareSerial(rx, tx)
 {}
-void UpdatedSoftwareSerial::sendPacket(Packet& p)
+void UpdatedSoftwareSerial::sendPacket(Packet p)
 {
 	uint8_t i;
 	for (i = 0; i < p.getLength(); i++)
 		this->print(p[i]);
 }
-
+/*
 Packet UpdatedSoftwareSerial::recivePacket(const uint8_t length)
 {
-	/* FIXME bad declaration. Not using now.
+	 FIXME bad declaration. Not using now.
 	uint8_t *data = (uint8_t *) new uint8_t[length];
 	uint8_t i;
 	for (i = 0; i <length; i++)
 		*(data+i) = this->read();
-	*/
-}
 
+	return ;
+}
+*/
 /////////////////////////////////////////////
 
 ServoCascadue::ServoCascadue(uint8_t rx, uint8_t tx, uint8_t transmitState)
@@ -117,10 +121,14 @@ Errors ServoCascadue::checkForErrors(Packet *packet)
 		{
 			if (i & 1)
 			{
-
-
+				*(errs + iter) = static_cast<Error>(errNum);
+				iter++;
 			}
-		}
+		}// end of for
+	Errors result;
+	result.count = count;
+	result.ers = errs;
+	return result;
 }
 
 Errors ServoCascadue::ping(uint8_t id)
@@ -133,7 +141,46 @@ Errors ServoCascadue::ping(uint8_t id)
 	return this->checkForErrors(p);
 }
 
+Errors ServoCascadue::setServoLimit(uint8_t id, uint16_t cw_limit,
+		uint16_t ccw_limit)
+{
+	digitalWrite(this->transmitState, HIGH);
+	cw_limit = (cw_limit > 1023) ? 1023 : cw_limit;
+	ccw_limit = (ccw_limit > 1023) ? 1023 : ccw_limit;
+	uint8_t *cw = splitShort(cw_limit);
+	uint8_t *ccw = splitShort(ccw_limit);
+	uint8_t params[] = {0x06, *cw, *(cw+1), *ccw, *(ccw+1)};
+	uint8_t *pa = params;
+	this->packetBuildAndSend(id,0x03,5,pa);
+	digitalWrite(this->transmitState, LOW);
+	Packet *p = this->packetRecive();
+	return this->checkForErrors(p);
 
+}
+Errors ServoCascadue::setServoPosition(uint8_t id, uint16_t pos,
+		uint16_t velocity)
+{
+	digitalWrite(this->transmitState, HIGH);
+	pos = (pos > 1023) ? 1023 : pos;
+	velocity = (velocity > 1023) ? 1023 : velocity;
+	uint8_t* posB = splitShort(pos);
+	uint8_t* velB = splitShort(velocity);
+	uint8_t params[] = {0x1E, *posB,*(posB+1), *velB, *(velB+1)};
+	uint8_t *pa = params;
+	this->packetBuildAndSend(id,0x03,5,pa);
+	digitalWrite(this->transmitState,LOW);
+	Packet *p = this->packetRecive();
+	return this->checkForErrors(p);
+
+}
+
+uint8_t *splitShort(uint16_t s)
+{
+	uint8_t *r = (uint8_t*) new uint8_t[2];
+	*r = (uint8_t) s;
+	*(r+1) = (uint8_t) (s >> 8);
+	return r;
+}
 
 
 
